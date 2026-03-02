@@ -1,26 +1,31 @@
+import os
 import pandas as pd
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Load dataset
-movies = pd.read_csv("movies.csv")
+# Get correct path for CSV (works locally + on Streamlit Cloud)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+csv_path = os.path.join(BASE_DIR, "movies.csv")
 
-# Select required columns (based on YOUR dataset)
+# Load dataset
+movies = pd.read_csv(csv_path)
+
+# Select required columns
 movies = movies[['original_title', 'overview', 'genres']]
 movies.dropna(inplace=True)
 
-# Rename column for simplicity
+# Rename column
 movies.rename(columns={'original_title': 'title'}, inplace=True)
 
 # Combine text features
 movies['content'] = movies['overview'] + " " + movies['genres']
 
-# Convert text to numerical vectors
+# Vectorization
 tfidf = TfidfVectorizer(stop_words='english')
 tfidf_matrix = tfidf.fit_transform(movies['content'])
 
-# Compute cosine similarity
+# Similarity calculation
 similarity = cosine_similarity(tfidf_matrix)
 
 # Recommendation function
@@ -30,7 +35,7 @@ def recommend(movie_name):
     scores = sorted(scores, key=lambda x: x[1], reverse=True)[1:6]
     return [movies.iloc[i[0]].title for i in scores]
 
-# Streamlit UI
+# UI
 st.title("🎬 Movie Recommendation System")
 
 selected_movie = st.selectbox("Select a Movie", movies['title'])
